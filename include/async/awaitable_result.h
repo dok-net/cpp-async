@@ -90,7 +90,9 @@ namespace async
 
         union result_union
         {
+#ifdef _MSC_VER
 #pragma prefast(suppress:26495, "Do not default-initialize in a union.")
+#endif
             constexpr result_union() noexcept {}
             ~result_union() noexcept {}
 

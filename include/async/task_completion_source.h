@@ -22,14 +22,16 @@ namespace async::details
             m_taskState{ task_state<T>::create_shared() }, m_completionState{ task_completion_state::unset }
         {}
 
-        task<T> task() const noexcept { return ::async::task<T>{ m_taskState }; }
+        async::task<T> task() const noexcept { return ::async::task<T>{ m_taskState }; }
 
         template<typename... Args>
         void set_value(Args&&... args)
         {
             if (!try_set_value(args...))
             {
+#ifdef __cpp_exceptions
                 throw std::runtime_error{ "The task_completion_source<T> has already been completed." };
+#endif
             }
         }
 
@@ -43,15 +45,19 @@ namespace async::details
                 return false;
             }
 
+#ifdef __cpp_exceptions
             try
             {
+#endif
                 m_taskState->result.set_value(std::forward<T>(args)...);
+#ifdef __cpp_exceptions
             }
             catch (...)
             {
                 m_completionState = task_completion_state::unset;
                 throw;
             }
+#endif
 
             m_completionState = task_completion_state::set;
             complete();
@@ -63,12 +69,16 @@ namespace async::details
         {
             if (!exception)
             {
+#ifdef __cpp_exceptions
                 throw std::invalid_argument{ "The exception_ptr must not be empty." };
+#endif
             }
 
             if (!try_set_exception(exception))
             {
+#ifdef __cpp_exceptions
                 throw std::runtime_error{ "The task_completion_source<T> has already been completed." };
+#endif
             }
         }
 
@@ -86,15 +96,19 @@ namespace async::details
                 return false;
             }
 
+#ifdef __cpp_exceptions
             try
             {
+#endif
                 m_taskState->result.set_exception(exception);
+#ifdef __cpp_exceptions
             }
             catch (...)
             {
                 m_completionState = task_completion_state::unset;
                 std::terminate();
             }
+#endif
 
             m_completionState = task_completion_state::set;
             complete();
@@ -125,7 +139,7 @@ namespace async
     template<typename T>
     struct task_completion_source final
     {
-        task<T> task() const noexcept { return m_core.task(); }
+        async::task<T> task() const noexcept { return m_core.task(); }
 
         void set_value(T value) { m_core.set_value(value); }
 
@@ -145,7 +159,7 @@ namespace async
     template<>
     struct task_completion_source<void> final
     {
-        task<void> task() const noexcept { return m_core.task(); }
+        async::task<void> task() const noexcept { return m_core.task(); }
 
         void set_value() { m_core.set_value(); }
 
