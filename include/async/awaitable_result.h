@@ -60,11 +60,15 @@ namespace async
             case result_union_type::value:
                 return std::forward<T>(m_storage.value.value);
             case result_union_type::unset:
-                assert(false);
+#ifdef __cpp_exceptions
                 throw std::runtime_error{ "Awaitable result is not yet available." };
+#endif
             default:
-                assert(false);
+#ifdef __cpp_exceptions
                 throw std::runtime_error{ "Invalid awaitable result state." };
+#else
+                assert(false);
+#endif
             }
         }
 

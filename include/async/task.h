@@ -106,7 +106,11 @@ namespace async
             {
                 if (currentStateOrCompletion != m_state->ready_state())
                 {
+#ifdef __cpp_exceptions
                     throw std::runtime_error{ "task<T> may be co_awaited (or have await_suspend() used) only once." };
+#else
+                    assert(false);
+#endif
                 }
 
                 return false;
@@ -121,6 +125,7 @@ namespace async
 
             if (!m_state->stateOrCompletion.compare_exchange_strong(currentStateOrCompletion, m_state->done_state()))
             {
+#ifdef __cpp_exceptions
                 if (currentStateOrCompletion == m_state->done_state())
                 {
                     throw std::runtime_error{ "task<T> may be co_awaited (or have await_resume() used) only once." };
@@ -130,7 +135,11 @@ namespace async
                     throw std::runtime_error{
                         "task<T>.await_resume() may not be called before await_ready() returns true."
                     };
-                }
+                };
+#else
+                assert(false);
+                return {};
+#endif
             }
 
             return m_state->result();

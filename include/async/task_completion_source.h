@@ -31,6 +31,8 @@ namespace async::details
             {
 #ifdef __cpp_exceptions
                 throw std::runtime_error{ "The task_completion_source<T> has already been completed." };
+#else
+                assert(false);
 #endif
             }
         }
@@ -71,13 +73,16 @@ namespace async::details
             {
 #ifdef __cpp_exceptions
                 throw std::invalid_argument{ "The exception_ptr must not be empty." };
+#else
+                assert(false);
 #endif
             }
-
-            if (!try_set_exception(exception))
+            else if (!try_set_exception(exception))
             {
 #ifdef __cpp_exceptions
                 throw std::runtime_error{ "The task_completion_source<T> has already been completed." };
+#else
+                assert(false);
 #endif
             }
         }

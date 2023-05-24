@@ -38,7 +38,11 @@ namespace async
         {
             if (!wait_for(rel_time))
             {
+#ifdef __cpp_exceptions
                 throw std::runtime_error{ "Wait timed out." };
+#else
+                assert(false);
+#endif
             }
         }
 
