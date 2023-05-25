@@ -50,9 +50,12 @@ namespace async::details
         [[nodiscard]] std::coroutine_handle<> mark_ready() noexcept
         {
             // mark_ready() must not be called if the task state has already moved to "done".
-            assert(!is_done());
+            //assert(!is_done());
 
-            void* previousStateOrCompletion{ stateOrCompletion.exchange(ready_state()) };
+            noInterrupts();
+            void* previousStateOrCompletion{ stateOrCompletion };
+            stateOrCompletion = ready_state();
+            interrupts();
 
             if (is_completion(previousStateOrCompletion))
             {
@@ -102,14 +105,18 @@ namespace async
 
             void* currentStateOrCompletion{ m_state->running_state() };
 
-            if (!m_state->stateOrCompletion.compare_exchange_strong(currentStateOrCompletion, handleAddress))
+            noInterrupts();
+            const bool eq = m_state->stateOrCompletion == currentStateOrCompletion;
+            if (eq) m_state->stateOrCompletion = handleAddress;
+            interrupts();
+            if (!eq)
             {
                 if (currentStateOrCompletion != m_state->ready_state())
                 {
 #ifdef __cpp_exceptions
                     throw std::runtime_error{ "task<T> may be co_awaited (or have await_suspend() used) only once." };
 #else
-                    assert(false);
+                    //assert(false);
 #endif
                 }
 
@@ -123,7 +130,11 @@ namespace async
         {
             void* currentStateOrCompletion{ m_state->ready_state() };
 
-            if (!m_state->stateOrCompletion.compare_exchange_strong(currentStateOrCompletion, m_state->done_state()))
+            noInterrupts();
+            const bool eq = m_state->stateOrCompletion == currentStateOrCompletion;
+            if (eq) m_state->stateOrCompletion = m_state->done_state();
+            interrupts();
+            if (!eq)
             {
 #ifdef __cpp_exceptions
                 if (currentStateOrCompletion == m_state->done_state())
@@ -137,7 +148,7 @@ namespace async
                     };
                 };
 #else
-                assert(false);
+                //assert(false);
                 return {};
 #endif
             }

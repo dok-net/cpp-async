@@ -28,14 +28,18 @@ namespace async::details
         {
             awaitable_result<T> result{};
 
+#ifdef __cpp_exceptions
             try
             {
+#endif
                 result.set_value(co_await std::move(awaitable));
+#ifdef __cpp_exceptions
             }
             catch (...)
             {
                 result.set_exception(std::current_exception());
             }
+#endif
 
             continuation(std::move(result));
 

@@ -42,7 +42,11 @@ namespace async::details
         {
             task_completion_state expected{ task_completion_state::unset };
 
-            if (!m_completionState.compare_exchange_strong(expected, task_completion_state::setting))
+	    noInterrupts();
+            const bool eq = m_completionState == expected;
+            if (eq) m_completionState = task_completion_state::setting;
+	    interrupts();
+            if (!eq)
             {
                 return false;
             }
@@ -96,7 +100,11 @@ namespace async::details
 
             task_completion_state expected{ task_completion_state::unset };
 
-            if (!m_completionState.compare_exchange_strong(expected, task_completion_state::setting))
+	    noInterrupts();
+            const bool eq = m_completionState == expected;
+            if (eq) m_completionState = task_completion_state::setting;
+	    interrupts();
+            if (!eq)
             {
                 return false;
             }
