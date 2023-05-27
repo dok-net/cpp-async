@@ -149,7 +149,7 @@ namespace async
                 };
 #else
                 //assert(false);
-                return {};
+                // return {};
 #endif
             }
 

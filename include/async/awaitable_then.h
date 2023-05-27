@@ -54,14 +54,18 @@ namespace async::details
         {
             std::exception_ptr exception{};
 
+#ifdef __cpp_exceptions
             try
             {
+#endif
                 co_await std::move(awaitable);
+#ifdef __cpp_exceptions
             }
             catch (...)
             {
                 exception = std::current_exception();
             }
+#endif
 
             continuation(awaitable_result<void>{ exception });
             co_return;
